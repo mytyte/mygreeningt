@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">My Application02</string>
+    <string name="page_number">Page %1$d</string>
+</resources>
