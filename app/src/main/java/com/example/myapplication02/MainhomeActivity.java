@@ -1,18 +1,28 @@
 package com.example.myapplication02;
 
-import android.os.Bundle;
-
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 import me.relex.circleindicator.CircleIndicator3;
 
 //상품진열
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class MainhomeActivity extends FragmentActivity  {
+import android.os.Bundle;
+import android.util.Log;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+
+public class MainhomeActivity extends FragmentActivity {
     private ViewPager2 mPager;
     private ViewPager2 mPager01;   //01붙은거는 슬라이드2변수
 
@@ -22,8 +32,15 @@ public class MainhomeActivity extends FragmentActivity  {
     private final int num_page01 = 4;
     private CircleIndicator3 mIndicator;
     private CircleIndicator3 mIndicator01;
+    //상품목록
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter adapter;
+    private RecyclerView.LayoutManager layoutManager;
+    private ArrayList<Productmain> arrayList;
+    private FirebaseDatabase database;
+    private DatabaseReference databaseReference;
 
-                    //슬라이드1 화면
+    //슬라이드1 화면
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,19 +73,36 @@ public class MainhomeActivity extends FragmentActivity  {
         mPager01.setCurrentItem(1000);           // 시작 지점
         mPager01.setOffscreenPageLimit(2);
 
-        //쇼핑 상품
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        GridLayoutManager layoutManager = new GridLayoutManager(this,2); //가로2개
+        //상품목록
+        recyclerView = findViewById(R.id.recyclerView); //어디연결
+        recyclerView.setHasFixedSize(true); //리사이클뷰 성능강화
+        layoutManager = new LinearLayoutManager(this);
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);   //가로2개(추가)
         recyclerView.setLayoutManager(layoutManager);
-        final ProductdAdapter adapter = new ProductdAdapter();
+        arrayList = new ArrayList<>(); //user객체를 담을 ArrayList(어댑터쪽으로)
 
-        adapter.addItem(new Productmain("천연비누", "4000원" ,  R.drawable.menu01img));
-        adapter.addItem(new Productmain("천연 수세미", "3500원" , R.drawable.menu01img));
-        adapter.addItem(new Productmain("천연비누", "4000원" ,  R.drawable.menu01img));
-        adapter.addItem(new Productmain("천연 수세미", "3500원" , R.drawable.menu01img));
+        database = FirebaseDatabase.getInstance(); //파이어베이스 연동
 
-        recyclerView.setAdapter(adapter);
-
+        databaseReference = database.getReference("User");//db데이터연결
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                //파이어베이스 데이터베이스의 데이터를 받아오는곳
+                arrayList.clear(); //기준 배열리스트가 존재하지않게 초기화
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) { //반복문으로 데이터리스트 추출
+                    Productmain user = snapshot.getValue(Productmain.class);  //만들어뒀던 user객체에 데이터를 담는다
+                    arrayList.add(user); //담은 데이터들을 배열리스트에 넣고 리사이클뷰로 보낼준비
+                }
+                adapter.notifyDataSetChanged(); //리스트저장 및 새로고침
+                //db가져오던중 에러발생시
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("MainhomeActivity", String.valueOf(databaseError.toException())); //에러문출력
+            }
+        });
+        adapter = new ProductAdapter(arrayList, this);
+        recyclerView.setAdapter(adapter);  //리사이클뷰에 어댑터연결
 
         //페이지 변경 이벤트 리스너 등록
         mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
@@ -86,7 +120,7 @@ public class MainhomeActivity extends FragmentActivity  {
                 mIndicator.animatePageSelected(position % num_page);
             }
         });
-                            //슬라이드2
+        //슬라이드2
         mPager01.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -102,6 +136,5 @@ public class MainhomeActivity extends FragmentActivity  {
                 mIndicator01.animatePageSelected(position % num_page01);
             }
         });
-
     }
 }

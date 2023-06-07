@@ -1,36 +1,33 @@
 package com.example.myapplication02;
 
 public class Productmain {
-    String Name;
-    String Cost;
-    int Pic;
+    private String profile;
+    private String productName;
+    private String cost;
 
-    public Productmain(String name, String cost, int pic) {
-        Name = name;
-        Cost = cost;
-        Pic = pic;
+    public Productmain(){}
+
+    public String getProfile(){
+        return profile;
     }
 
-    public int getPic(){
-        return Pic;
-    }
-    public void setPic(int pic){
-        Pic = pic;
+    public void setProfile(String profile){
+        this.profile = profile;
     }
 
-    public String getName() {
-        return Name;
+    public String getProductName(){
+        return productName;
     }
 
-    public void setName(String name) {
-        Name = name;
+    public void setProductName(String productName){
+        this.productName = productName;
     }
 
-    public String getCost() {
-        return Cost;
+    public String getCost(){
+        return cost;
     }
 
-    public void setCost(String cost) {
-        Cost = cost;
+    public void setCost(String cost){
+        this.cost = cost;
     }
 }
